@@ -13,6 +13,13 @@ from bop_toolkit_lib import config
 from bop_toolkit_lib import inout
 from bop_toolkit_lib import misc
 
+#from bop_toolkit_lib import dataset_params
+#dp_split = dataset_params.get_split_params(
+#    r'/home/tpatten/Data/bop', 'ho3d', 'test', None)
+
+#print(dp_split)
+#sys.exit(0)
+
 
 # PARAMETERS (some can be overwritten by the command line arguments below).
 ################################################################################
@@ -34,6 +41,7 @@ p = {
         'tudl': 15,
         'tyol': 15,
         'ycbv': 15,
+        'ho3d': 15,
       },
       'vsd_taus': list(np.arange(0.05, 0.51, 0.05)),
       'vsd_normalized_by_diameter': True,
@@ -147,7 +155,7 @@ for result_filename in p['result_filenames']:
 
     # Calculate error of the pose estimates.
     calc_errors_cmd = [
-      'python',
+      'python3',
       os.path.join('scripts', 'eval_calc_errors.py'),
       '--n_top={}'.format(error['n_top']),
       '--error_type={}'.format(error['type']),
@@ -196,7 +204,7 @@ for result_filename in p['result_filenames']:
       for correct_th in error['correct_th']:
 
         calc_scores_cmd = [
-          'python',
+          'python3',
           os.path.join('scripts', 'eval_calc_scores.py'),
           '--error_dir_paths={}'.format(error_dir_path),
           '--eval_path={}'.format(p['eval_path']),

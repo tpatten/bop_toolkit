@@ -30,7 +30,10 @@ def get_camera_params(datasets_path, dataset_name, cam_type=None):
       cam_type = 'primesense'
     cam_filename = 'camera_{}.json'.format(cam_type)
 
-  elif dataset_name == 'hb':
+  elif dataset_name in ['hbs', 'hb']:
+    # Both versions of the HB dataset share the same directory.
+    dataset_name = 'hb'
+
     # Includes images captured by two sensors. Use Primesense as default.
     if cam_type is None:
       cam_type = 'primesense'
@@ -79,10 +82,10 @@ def get_model_params(datasets_path, dataset_name, model_type=None):
     'icmi': list(range(1, 7)),
     'icbin': list(range(1, 3)),
     'itodd': list(range(1, 29)),
-    # Subset of the HB dataset used in the BOP Challenge 2019/2020:
-    # 'hb': [1, 3, 4, 8, 9, 10, 12, 15, 17, 18, 19, 22, 23, 29, 32, 33],
+    'hbs': [1, 3, 4, 8, 9, 10, 12, 15, 17, 18, 19, 22, 23, 29, 32, 33],
     'hb': list(range(1, 34)),  # Full HB dataset.
     'ycbv': list(range(1, 22)),
+    'ho3d': list(range(1, 22)),
   }[dataset_name]
 
   # ID's of objects with ambiguous views evaluated using the ADI pose error
@@ -97,14 +100,20 @@ def get_model_params(datasets_path, dataset_name, model_type=None):
     'icmi': [1, 2, 6],
     'icbin': [1],
     'itodd': [2, 3, 4, 5, 7, 8, 9, 11, 12, 14, 17, 18, 19, 23, 24, 25, 27, 28],
+    'hbs': [10, 12, 18, 29],
     'hb': [6, 10, 11, 12, 13, 14, 18, 24, 29],
     'ycbv': [1, 13, 14, 16, 18, 19, 20, 21],
+    'ho3d': [1, 13, 14, 16, 18, 19, 20, 21],
   }[dataset_name]
 
   # T-LESS includes two types of object models, CAD and reconstructed.
   # Use the CAD models as default.
   if dataset_name == 'tless' and model_type is None:
     model_type = 'cad'
+
+  # Both versions of the HB dataset share the same directory.
+  if dataset_name == 'hbs':
+    dataset_name = 'hb'
 
   # Name of the folder with object models.
   models_folder_name = 'models'
@@ -294,16 +303,28 @@ def get_split_params(datasets_path, dataset_name, split, split_type=None):
       p['elev_range'] = (-0.5 * math.pi, 0.5 * math.pi)
 
   # HomebrewedDB (HB).
-  elif dataset_name == 'hb':
+  # 'hbs' -- Subset of the HB dataset used in the BOP Challenge 2019/2020.
+  # 'hb' -- Full HB dataset.
+  elif dataset_name in ['hbs', 'hb']:
+    dataset_name_orig = dataset_name
+    dataset_name = 'hb'
+
     # Use images from the Primesense sensor by default.
     if split_type is None:
       split_type = 'primesense'
 
-    p['scene_ids'] = {
-      'train': [],
-      'val': list(range(1, 14)),
-      'test': list(range(1, 14))
-    }[split]
+    if dataset_name_orig == 'hbs':
+      p['scene_ids'] = {
+        'train': [],
+        'val': [3, 5, 13],
+        'test': [3, 5, 13]
+      }[split]
+    else:
+      p['scene_ids'] = {
+        'train': [],
+        'val': list(range(1, 14)),
+        'test': list(range(1, 14))
+      }[split]
 
     p['im_size'] = {
       'pbr': (640, 480),
@@ -337,6 +358,13 @@ def get_split_params(datasets_path, dataset_name, split, split_type=None):
       p['depth_range'] = (612.92, 1243.59)
       p['azimuth_range'] = (0, 2 * math.pi)
       p['elev_range'] = (-1.2788, 1.1291)  # (-73.27, 64.69) [deg].
+
+  # HO3D.
+  elif dataset_name == 'ho3d':
+    if split == 'test':
+      p['scene_ids'] = list(range(1, 15))
+
+    p['im_size'] = (640, 480)
 
   else:
     raise ValueError('Unknown BOP dataset.')
