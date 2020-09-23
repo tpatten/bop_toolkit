@@ -18,7 +18,7 @@ from bop_toolkit_lib import visualization
 ################################################################################
 p = {
   # See dataset_params.py for options.
-  'dataset': 'lm',
+  'dataset': 'ho3d',
 
   # Dataset split. Options: 'train', 'val', 'test'.
   'dataset_split': 'test',
@@ -48,7 +48,7 @@ p = {
   'vis_rgb_resolve_visib': True,
   
   # Indicates whether to save images of depth differences.
-  'vis_depth_diff': False,
+  'vis_depth_diff': True,
   
   # Whether to use the original model color.
   'vis_orig_color': False,

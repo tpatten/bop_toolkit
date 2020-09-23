@@ -76,6 +76,7 @@ def calc_localization_scores(scene_ids, obj_ids, matches, n_top, do_print=True):
   """
   # Count the number of visible object instances in each image.
   insts = {i: {j: defaultdict(lambda: 0) for j in scene_ids} for i in obj_ids}
+  print(scene_ids)
   for m in matches:
     if m['valid']:
       insts[m['obj_id']][m['scene_id']][m['im_id']] += 1

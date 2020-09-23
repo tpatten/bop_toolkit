@@ -18,12 +18,12 @@ else:
 results_path = r'/home/tpatten/Data/test'
 
 # Folder for the calculated pose errors and performance scores.
-eval_path = r'/home/tpatten/Data/testr'
+eval_path = r'/home/tpatten/Data/bop/results_pose_errors'
 
 ######## Extended ########
 
 # Folder for outputs (e.g. visualizations).
-output_path = r'/path/to/output/folder'
+output_path = r'/home/tpatten/Data/test/'
 
 # For offscreen C++ rendering: Path to the build folder of bop_renderer (github.com/thodan/bop_renderer).
 bop_renderer_path = r'/path/to/bop_renderer/build'

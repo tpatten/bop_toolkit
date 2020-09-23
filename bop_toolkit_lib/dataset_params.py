@@ -362,7 +362,7 @@ def get_split_params(datasets_path, dataset_name, split, split_type=None):
   # HO3D.
   elif dataset_name == 'ho3d':
     if split == 'test':
-      p['scene_ids'] = list(range(1, 15))
+      p['scene_ids'] = list(range(1, 14))
 
     p['im_size'] = (640, 480)
 
