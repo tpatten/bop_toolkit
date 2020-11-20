@@ -227,3 +227,48 @@ def vis_object_poses(
     ]
     depth_diff_vis = write_text_on_image(depth_diff_vis, depth_info)
     inout.save_im(vis_depth_diff_path, depth_diff_vis)
+
+def eval_object_hand_poses(dp_split, scene_id, im_id, poses, K, ren, depth):
+    fx, fy, cx, cy = K[0, 0], K[1, 1], K[0, 2], K[1, 2]
+    # render hand
+    # print(dp_split, scene_id, im_id)
+    hand_path = dp_split['hand_path'].format(scene_id=scene_id, im_id=im_id)
+    ren.add_object(255, hand_path)
+    hand_ren = ren.render_object(255, np.eye(3), np.array([0, 0, 0]), fx, fy, cx, cy)
+    hand_ren['depth'] *= 1000
+    ren.remove_object(255)
+  
+    # render objects
+    objs_ren = []
+    for i, pose in enumerate(poses):
+        objs_ren.append(ren.render_object(pose['obj_id'], pose['R'], pose['t'], fx, fy, cx, cy))
+  
+    def eval(depth_est, depth_obs, thresh=5, eps=5):
+        rendered = depth_est > 0
+        visible = np.logical_and(rendered, depth_est <= depth_obs + eps)
+        difference = np.abs(depth_est - depth_obs)
+        valid = difference[rendered] < thresh
+        visible_valid = difference[visible] < thresh
+        num_rendered = rendered.sum()
+        visible_of_rendered = float(visible.sum()) / num_rendered if num_rendered > 0 else 0
+        valid_of_rendered = float(valid.sum()) / num_rendered if num_rendered > 0 else 0
+        valid_of_visible = float(visible_valid.sum()) / visible.sum() if visible.sum() > 0 else 0
+        return int(num_rendered), visible_of_rendered, valid_of_rendered, valid_of_visible
+
+
+    # 1) check individually
+    hand_scores = eval(hand_ren['depth'], depth)
+    objs_scores = [eval(obj_ren['depth'], depth) for obj_ren in objs_ren]
+    
+    # 2) check composed
+    # accumulate depth
+    depth_buffer = np.zeros_like(hand_ren['depth'])
+    for rendering in objs_ren + [hand_ren]:
+        visible = np.logical_or(depth_buffer == 0, rendering['depth'] < depth_buffer)
+        valid = np.logical_and(rendering['depth'], visible)
+        depth_buffer[valid] = rendering['depth'][valid]
+    scores = eval(depth_buffer, depth)
+    
+    # Return or save to json here
+    result = {'hand_scores': hand_scores, 'objs_scores': objs_scores, 'scores': scores}
+    return result

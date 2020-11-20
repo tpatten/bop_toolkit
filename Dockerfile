@@ -14,6 +14,7 @@ RUN python3.6 -m pip install numpy==1.14.5 \
                              pypng==0.0.19 \
                              pytz \
                              Cython==0.29.10 \
-                             PyOpenGL==3.1.0
+                             PyOpenGL==3.1.0 \
+                             trimesh==3.8.8
 
 RUN python3.6 -m pip install glumpy==1.1.0

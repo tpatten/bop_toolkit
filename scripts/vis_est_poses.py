@@ -23,7 +23,7 @@ p = {
   'n_top': 1,  # 0 = all estimates, -1 = given by the number of GT poses.
 
   # True = one visualization for each (im_id, obj_id), False = one per im_id.
-  'vis_per_obj_id': True,
+  'vis_per_obj_id': False,
 
   # Indicates whether to render RGB image.
   'vis_rgb': True,
@@ -48,7 +48,8 @@ p = {
   # of the format. Example results can be found at:
   # http://ptak.felk.cvut.cz/6DB/public/bop_sample_results/bop_challenge_2019/
   'result_filenames': [
-    '/path/to/csv/with/results',
+    '/home/tpatten/Data/bop/results/PPF/ppf-gt_ho3d-test.csv'
+    #'/path/to/csv/with/results',
   ],
 
   # Folder containing the BOP datasets.
@@ -103,7 +104,7 @@ for result_fname in p['result_filenames']:
   # Create a renderer.
   width, height = dp_split['im_size']
   ren = renderer.create_renderer(
-    width, height, p['renderer_type'], mode=renderer_mode)
+    width, height, p['renderer_type'], mode=renderer_mode, shading='flat')
 
   # Load object models.
   models = {}

@@ -5,6 +5,7 @@
 
 import os
 import numpy as np
+import json
 
 from bop_toolkit_lib import config
 from bop_toolkit_lib import dataset_params
@@ -124,8 +125,8 @@ for obj_id in dp_model['obj_ids']:
     model_color = tuple(colors[(obj_id - 1) % len(colors)])
   ren.add_object(obj_id, model_path, surf_color=model_color)
 
+obj_vis_dict = {}
 for scene_id in scene_ids_curr:
-
   # Load scene info and ground-truth poses.
   scene_camera = inout.load_scene_camera(
     dp_split['scene_camera_tpath'].format(scene_id=scene_id))
@@ -201,9 +202,21 @@ for scene_id in scene_ids_curr:
         scene_id=scene_id, im_id=im_id)
 
     # Visualization.
-    visualization.vis_object_poses(
-      poses=gt_poses, K=K, renderer=ren, rgb=rgb, depth=depth,
-      vis_rgb_path=vis_rgb_path, vis_depth_diff_path=vis_depth_diff_path,
-      vis_rgb_resolve_visib=p['vis_rgb_resolve_visib'])
+    #visualization.vis_object_poses(
+    #  poses=gt_poses, K=K, renderer=ren, rgb=rgb, depth=depth,
+    #  vis_rgb_path=vis_rgb_path, vis_depth_diff_path=vis_depth_diff_path,
+    #  vis_rgb_resolve_visib=p['vis_rgb_resolve_visib'])
+
+    obj_vis_scores = visualization.eval_object_hand_poses(dp_split, scene_id, im_id, gt_poses, K, ren, depth)
+    if scene_id not in obj_vis_dict:
+      obj_vis_dict[scene_id] = {}
+    obj_vis_dict[scene_id][im_id] = obj_vis_scores
+
+# Save the object visibility scores
+misc.ensure_dir(os.path.dirname(config.output_path))
+obj_vis_scores_filename = os.path.join(config.output_path, 'obj_vis_scores.json')
+with open(obj_vis_scores_filename, 'w') as outfile:
+  json.dump(obj_vis_dict, outfile)
+# [0] num_rendered, [1] visible_of_rendered, [2] valid_of_rendered, [3] valid_of_visible
 
 misc.log('Done.')

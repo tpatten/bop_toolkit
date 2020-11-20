@@ -1,3 +1,7 @@
 nvidia-docker run -it -v /tmp/.X11-unix:/tmp/.X11-uni -e DISPLAY=$DISPLAY --env QT_X11_NO_MITSHM=1 --network=host -v /home/tpatten/:/home/tpatten/ -v /usr/lib/nvidia-450:/usr/lib/nvidia-450 -v /usr/lib32/nvidia-450:/usr/lib32/nvidia-450 --privileged bop_toolkit:latest bash
 
 export PYTHONPATH=/home/tpatten/Code/bop_toolkit/:$PYTHONPATH
+export PATH="/usr/lib/nvidia-450/bin":${PATH}
+export LD_LIBRARY_PATH="/usr/lib/nvidia-450:/usr/lib32/nvidia-450":${LD_LIBRARY_PATH}
+
+xvfb-run -s "-screen 0 1400x900x24" python <your_script.py>

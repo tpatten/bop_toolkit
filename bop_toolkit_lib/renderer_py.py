@@ -408,6 +408,136 @@ class RendererPython(renderer.Renderer):
     depth_program.bind(self.vertex_buffers[obj_id])
     self.depth_programs[obj_id] = depth_program
 
+  def add_object2(self, obj_id, model_mesh, **kwargs):
+    """See base class."""
+    # Color of the object model (the original color saved with the object model
+    # will be used if None).
+    surf_color = None
+    if 'surf_color' in kwargs:
+      surf_color = kwargs['surf_color']
+
+    # Load the object model.
+    #model = inout.load_ply(model_path)
+    model = model_mesh
+    self.models[obj_id] = model
+
+    # Calculate the 3D bounding box of the model (will be used to set the near
+    # and far clipping plane).
+    bb = misc.calc_3d_bbox(
+      model['pts'][:, 0], model['pts'][:, 1], model['pts'][:, 2])
+    self.model_bbox_corners[obj_id] = np.array([
+      [bb[0], bb[1], bb[2]],
+      [bb[0], bb[1], bb[2] + bb[5]],
+      [bb[0], bb[1] + bb[4], bb[2]],
+      [bb[0], bb[1] + bb[4], bb[2] + bb[5]],
+      [bb[0] + bb[3], bb[1], bb[2]],
+      [bb[0] + bb[3], bb[1], bb[2] + bb[5]],
+      [bb[0] + bb[3], bb[1] + bb[4], bb[2]],
+      [bb[0] + bb[3], bb[1] + bb[4], bb[2] + bb[5]],
+    ])
+
+    # Set texture/color of vertices.
+    self.model_textures[obj_id] = None
+
+    # Use the specified uniform surface color.
+    if surf_color is not None:
+      colors = np.tile(list(surf_color) + [1.0], [model['pts'].shape[0], 1])
+
+      # Set UV texture coordinates to dummy values.
+      texture_uv = np.zeros((model['pts'].shape[0], 2), np.float32)
+
+    # Use the model texture.
+    elif 'texture_file' in self.models[obj_id].keys():
+      model_texture_path = os.path.join(
+        os.path.dirname(model_path), self.models[obj_id]['texture_file'])
+      model_texture = inout.load_im(model_texture_path)
+
+      # Normalize the texture image.
+      if model_texture.max() > 1.0:
+        model_texture = model_texture.astype(np.float32) / 255.0
+      model_texture = np.flipud(model_texture)
+      self.model_textures[obj_id] = model_texture
+
+      # UV texture coordinates.
+      texture_uv = model['texture_uv']
+
+      # Set the per-vertex color to dummy values.
+      colors = np.zeros((model['pts'].shape[0], 3), np.float32)
+
+    # Use the original model color.
+    elif 'colors' in model.keys():
+      assert (model['pts'].shape[0] == model['colors'].shape[0])
+      colors = model['colors']
+      if colors.max() > 1.0:
+        colors /= 255.0  # Color values are expected in range [0, 1].
+
+      # Set UV texture coordinates to dummy values.
+      texture_uv = np.zeros((model['pts'].shape[0], 2), np.float32)
+
+    # Set the model color to gray.
+    else:
+      colors = np.ones((model['pts'].shape[0], 3), np.float32) * 0.5
+
+      # Set UV texture coordinates to dummy values.
+      texture_uv = np.zeros((model['pts'].shape[0], 2), np.float32)
+
+    # Set the vertex data.
+    if self.mode == 'depth':
+      vertices_type = [
+        ('a_position', np.float32, 3),
+        ('a_color', np.float32, colors.shape[1])
+      ]
+      vertices = np.array(list(zip(model['pts'], colors)), vertices_type)
+    else:
+      if self.shading == 'flat':
+        vertices_type = [
+          ('a_position', np.float32, 3),
+          ('a_color', np.float32, colors.shape[1]),
+          ('a_texcoord', np.float32, 2)
+        ]
+        vertices = np.array(list(zip(model['pts'], colors, texture_uv)),
+                            vertices_type)
+      elif self.shading == 'phong':
+        vertices_type = [
+          ('a_position', np.float32, 3),
+          ('a_normal', np.float32, 3),
+          ('a_color', np.float32, colors.shape[1]),
+          ('a_texcoord', np.float32, 2)
+        ]
+        vertices = np.array(list(zip(model['pts'], model['normals'],
+                                     colors, texture_uv)), vertices_type)
+      else:
+        raise ValueError('Unknown shading type.')
+
+    # Create vertex and index buffer for the loaded object model.
+    self.vertex_buffers[obj_id] = vertices.view(gloo.VertexBuffer)
+    self.index_buffers[obj_id] = \
+      model['faces'].flatten().astype(np.uint32).view(gloo.IndexBuffer)
+
+    # Set shader for the selected shading.
+    if self.shading == 'flat':
+      rgb_fragment_code = _rgb_fragment_flat_code
+    elif self.shading == 'phong':
+      rgb_fragment_code = _rgb_fragment_phong_code
+    else:
+      raise ValueError('Unknown shading type.')
+
+    # Prepare the RGB OpenGL program.
+    rgb_program = gloo.Program(_rgb_vertex_code, rgb_fragment_code)
+    rgb_program.bind(self.vertex_buffers[obj_id])
+    if self.model_textures[obj_id] is not None:
+      rgb_program['u_use_texture'] = int(True)
+      rgb_program['u_texture'] = self.model_textures[obj_id]
+    else:
+      rgb_program['u_use_texture'] = int(False)
+      rgb_program['u_texture'] = np.zeros((1, 1, 4), np.float32)
+    self.rgb_programs[obj_id] = rgb_program
+
+    # Prepare the depth OpenGL program.
+    depth_program = gloo.Program(_depth_vertex_code,_depth_fragment_code)
+    depth_program.bind(self.vertex_buffers[obj_id])
+    self.depth_programs[obj_id] = depth_program
+
   def remove_object(self, obj_id):
     """See base class."""
     del self.models[obj_id]
