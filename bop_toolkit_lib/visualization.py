@@ -233,10 +233,14 @@ def eval_object_hand_poses(dp_split, scene_id, im_id, poses, K, ren, depth):
     # render hand
     # print(dp_split, scene_id, im_id)
     hand_path = dp_split['hand_path'].format(scene_id=scene_id, im_id=im_id)
-    ren.add_object(255, hand_path)
-    hand_ren = ren.render_object(255, np.eye(3), np.array([0, 0, 0]), fx, fy, cx, cy)
-    hand_ren['depth'] *= 1000
-    ren.remove_object(255)
+    hand_available = False
+    if os.path.exists(hand_path):
+        hand_available = True
+    if hand_available:
+        ren.add_object(255, hand_path)
+        hand_ren = ren.render_object(255, np.eye(3), np.array([0, 0, 0]), fx, fy, cx, cy)
+        hand_ren['depth'] *= 1000
+        ren.remove_object(255)
   
     # render objects
     objs_ren = []
@@ -257,17 +261,24 @@ def eval_object_hand_poses(dp_split, scene_id, im_id, poses, K, ren, depth):
 
 
     # 1) check individually
-    hand_scores = eval(hand_ren['depth'], depth)
+    if hand_available:
+        hand_scores = eval(hand_ren['depth'], depth)
+    else:
+        hand_scores = None
+        
     objs_scores = [eval(obj_ren['depth'], depth) for obj_ren in objs_ren]
     
     # 2) check composed
     # accumulate depth
-    depth_buffer = np.zeros_like(hand_ren['depth'])
-    for rendering in objs_ren + [hand_ren]:
-        visible = np.logical_or(depth_buffer == 0, rendering['depth'] < depth_buffer)
-        valid = np.logical_and(rendering['depth'], visible)
-        depth_buffer[valid] = rendering['depth'][valid]
-    scores = eval(depth_buffer, depth)
+    if hand_available:
+        depth_buffer = np.zeros_like(hand_ren['depth'])
+        for rendering in objs_ren + [hand_ren]:
+            visible = np.logical_or(depth_buffer == 0, rendering['depth'] < depth_buffer)
+            valid = np.logical_and(rendering['depth'], visible)
+            depth_buffer[valid] = rendering['depth'][valid]
+        scores = eval(depth_buffer, depth)
+    else:
+        scores = None
     
     # Return or save to json here
     result = {'hand_scores': hand_scores, 'objs_scores': objs_scores, 'scores': scores}

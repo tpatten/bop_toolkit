@@ -48,7 +48,7 @@ p = {
   # of the format. Example results can be found at:
   # http://ptak.felk.cvut.cz/6DB/public/bop_sample_results/bop_challenge_2019/
   'result_filenames': [
-    '/home/tpatten/Data/bop/results/PPF/ppf-gt_ho3d-test.csv'
+    '/home/tpatten/Data/bop/results/pix2pose-icp-iccv19_ho3d-test.csv'
     #'/path/to/csv/with/results',
   ],
 
