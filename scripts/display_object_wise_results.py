@@ -38,7 +38,8 @@ args = parser.parse_args()
 p['result_filenames'] = args.result_filenames.split(',')
 
 # Get the directories of the metrics to display
-score_files = {'ad': 'error=ad_ntop=-1/scores_th=0.100_min-visib=-1.000.json',
+score_files = {'add': 'error=add_ntop=-1/scores_th=0.100_min-visib=-1.000.json',
+               'adi': 'error=adi_ntop=-1/scores_th=0.100_min-visib=-1.000.json',
                'vsd': 'error=vsd_ntop=-1_delta=15.000_tau=0.200/scores_th=0.300_min-visib=-1.000.json'}
 
 # Iterate over scores
@@ -52,7 +53,6 @@ for result_filename in p['result_filenames']:
         o_score = {}
         for sco in sorted(score_files.keys()):
             o_score[sco] = 0.0
-        # o_score['num_samples'] = 0
         object_scores[ob] = o_score
 
     for sco in sorted(score_files.keys()):
@@ -73,7 +73,17 @@ for result_filename in p['result_filenames']:
 
     print(object_scores)
     print('\nObject-wise results in {}\n'.format(result_filename))
-    print('        ADD/S   VSD')
+    print('Object  ADD     ADD-S   VSD')
+    print('------------------------------')
+    averages = {'add': 0.0, 'adi': 0.0, 'vsd': 0.0}
     for ob in p['objects']:
-        print('{}  {:.4f}  {:.4f}'.format(str(ob).zfill(6), object_scores[ob]['ad'], object_scores[ob]['vsd']))
+        print('{}  {:.4f}  {:.4f}  {:.4f}'.format(str(ob).zfill(6), object_scores[ob]['add'], object_scores[ob]['adi'],
+                                                  object_scores[ob]['vsd']))
+        averages['add'] += object_scores[ob]['add']
+        averages['adi'] += object_scores[ob]['adi']
+        averages['vsd'] += object_scores[ob]['vsd']
+    print('------------------------------')
+    num_objects = float(len(p['objects']))
+    print('Avg.    {:.4f}  {:.4f}  {:.4f}'.format(averages['add'] / num_objects, averages['adi'] / num_objects,
+                                                  averages['vsd'] / num_objects))
 

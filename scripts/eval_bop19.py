@@ -60,7 +60,12 @@ p = {
     },
     {
       'n_top': -1,
-      'type': 'ad',
+      'type': 'add',
+      'correct_th': [[0.1]]
+    },
+    {
+      'n_top': -1,
+      'type': 'adi',
       'correct_th': [[0.1]]
     },
   ],
@@ -93,7 +98,7 @@ p = {
   # File with a list of estimation targets to consider. The file is assumed to
   # be stored in the dataset folder.
   #'targets_filename': 'test_targets_bop19.json',
-  'targets_filename': 'test_targets_obj_000012.json',
+  'targets_filename': 'test_targets_inhand.json',
 }
 ################################################################################
 

@@ -362,7 +362,7 @@ def get_split_params(datasets_path, dataset_name, split, split_type=None):
   # HO3D.
   elif dataset_name == 'ho3d':
     if split == 'test':
-      p['scene_ids'] = list(range(1, 56))
+      p['scene_ids'] = list(range(1, 61))
     p['hand_path'] = join(datasets_path, dataset_name, split, '{scene_id:06d}', 'hands', '{im_id:06d}.ply')
     p['im_size'] = (640, 480)
 
