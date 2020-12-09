@@ -87,3 +87,16 @@ for result_filename in p['result_filenames']:
     print('Avg.    {:.4f}  {:.4f}  {:.4f}'.format(averages['add'] / num_objects, averages['adi'] / num_objects,
                                                   averages['vsd'] / num_objects))
 
+    print('\n ADD')
+    for ob in p['objects']:
+        print('{:.4f}'.format(object_scores[ob]['add']))
+
+    print('\n ADD-S')
+    for ob in p['objects']:
+        print('{:.4f}'.format(object_scores[ob]['adi']))
+
+    print('\n VSD')
+    for ob in p['objects']:
+        print('{:.4f}'.format(object_scores[ob]['vsd']))
+
+
